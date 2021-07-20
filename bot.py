@@ -8,12 +8,6 @@ channel_id = '-1001561042541'
 con = sqlite3.connect('tutors.db')
 db = con.cursor()
 
-# db.execute("CREATE TABLE IF NOT EXISTS tutor_list (id INTEGER PRIMARY KEY, username TEXT NOT NULL, gender TEXT, occupation TEXT, available TEXT, other TEXT)")
-
-# db.execute("CREATE TABLE subjects (id INTEGER, tutor_id INTEGER, subject TEXT, PRIMARY KEY (id), FOREIGN KEY (tutor_id) REFERENCES tutor_list(id))")
-
-# db.execute("CREATE TABLE levels (id INTEGER, tutor_id INTEGER, level TEXT, PRIMARY KEY (id), FOREIGN KEY (tutor_id) REFERENCES tutor_list(id))")
-
 API_KEY = os.environ['API_KEY']
 
 bot = telebot.TeleBot(API_KEY)
@@ -28,6 +22,7 @@ def hello(message):
 	markup.add(itembtn1, itembtn2)
 	bot.send_message(message.chat.id, "Hello! Welcome to the best Tutor Finder bot. Are you:", reply_markup=markup)
 
+	
 @bot.message_handler(regexp='Looking for a tutor')
 def reply_parent(message):
 	markup = types.ReplyKeyboardMarkup(row_width=1)
@@ -38,12 +33,14 @@ def reply_parent(message):
 	msg = bot.send_message(message.chat.id, "What level do you want your tutor to teach? Kindly submit one request form per level.", reply_markup=markup)
 	bot.register_next_step_handler(msg, set_subjects_parent)
 
+	
 def set_subjects_parent(message):
 	level = message.text
 	parent_pref["level"] = level
 	msg = bot.send_message(message.chat.id, "What subject do you want your tutor to teach? Kindly submit one request form per level.")
 	bot.register_next_step_handler(msg, set_occupation_parent)
 
+	
 def set_occupation_parent(message):
 	subject = message.text
 	parent_pref["subject"] = subject
@@ -55,12 +52,14 @@ def set_occupation_parent(message):
 	msg = bot.send_message(message.chat.id, "What stage of life do you want your tutor to be in?", reply_markup=markup)
 	bot.register_next_step_handler(msg, submit_occupation_request)
 
+	
 def submit_occupation_request(message):
 	occupation = message.text
 	parent_pref["occupation"] = occupation
 	msg = bot.send_message(message.chat.id, "Finding you a match... Type anything to see your match.")
 	bot.register_next_step_handler(msg, submit_parent_request)
 
+	
 def submit_parent_request(message):
 	con = sqlite3.connect('tutors.db')
 	db = con.cursor()
@@ -87,6 +86,7 @@ def submit_parent_request(message):
 			gender = gender.replace("'", "").replace("(", "").replace(")", "").replace(",", "")
 			bot.send_message(message.chat.id, parse_mode='HTML', text='Tutor {}: <a href="https://t.me/{}">Contact <b>Here</b></a>. \nTeaches <b>{}</b> at <b>{}</b> level. \n<b>Gender</b>: {}. \n<b>Occupation</b>: {}'.format(i, tutor, subject, level, gender, occupation))
 
+			
 @bot.message_handler(regexp='A tutor')
 def reply_tutor(message):
 	user_id = message.from_user.id
@@ -103,6 +103,7 @@ def reply_tutor(message):
 			return False
 	msg = bot.send_message(message.chat.id, "What is your Telegram username? Don't put @.")
 	bot.register_next_step_handler(msg, set_username)
+	
 
 def set_username(message):
 	usernamenow = message.text
@@ -114,7 +115,7 @@ def set_username(message):
 	con.commit()
 	msg = bot.send_message(message.chat.id, "What subjects do you teach? Please separate each subject with a comma and a space.")
 	bot.register_next_step_handler(msg, set_subjects_tutor)
-# Figure out a way to store the reply into the database 
+	
 
 def set_subjects_tutor(message):
 	user_id = message.from_user.id
@@ -128,7 +129,7 @@ def set_subjects_tutor(message):
 	msg = bot.send_message(message.chat.id, "What levels do you teach? Options: Primary/Secondary/JC. Please separate each level with a comma and a space.")
 	bot.register_next_step_handler(msg, set_level_tutor)
 
-#ADD SUBJECT
+
 def set_level_tutor(message):
 	user_id = message.from_user.id
 	levels = []
@@ -147,6 +148,7 @@ def set_level_tutor(message):
 	msg = bot.send_message(message.chat.id, "What is your gender identity? Parents will not be able to filter by gender, but it will be shown on your profile.", reply_markup=markup)
 	bot.register_next_step_handler(msg, set_gender_tutor)
 
+	
 def set_gender_tutor(message):
 	user_id = message.from_user.id
 	gender = message.text
@@ -162,6 +164,7 @@ def set_gender_tutor(message):
 	msg = bot.send_message(message.chat.id, "What stage of life are you currently in? Note NS etc falls under Waiting to Begin School.", reply_markup=markup)
 	bot.register_next_step_handler(msg, set_occupation_tutor)
 
+	
 def set_occupation_tutor(message):
 	user_id = message.from_user.id
 	occupation = message.text
@@ -172,6 +175,7 @@ def set_occupation_tutor(message):
 	msg = bot.send_message(message.chat.id, "If there is any additional information you want to provide, please do so now. E.G. Grades in relevant subjects, School, Teaching Style, etc. Only do so if you are comfortable with having your information posted on the channel. Privacy is important!")
 	bot.register_next_step_handler(msg, set_other_tutor)
 
+	
 def set_other_tutor(message):
 	user_id = message.from_user.id
 	other = message.text
@@ -186,6 +190,7 @@ def set_other_tutor(message):
 	msg = bot.send_message(message.chat.id, "Indicate if you are looking for tuition jobs now and parents can contact you to ask about that. Support to change this availability will be implemented soon. If NO, we will store your info in our database for future reference but we won't post you up on the channel.", reply_markup=markup) # Update when finished
 	bot.register_next_step_handler(msg, set_availability)
 
+	
 def set_availability(message):
 	user_id = message.from_user.id
 	availability = message.text
@@ -203,6 +208,7 @@ def set_availability(message):
 	elif availability == 'No':
 		bot.send_message(message.chat.id, "Your information will be stored in our database, but we won't post it on the channel. Goodbye and thanks for using Tutor Finder Bot!")
 
+		
 def set_willingness(message):
 	answer = message.text
 	if answer == 'Yes':
@@ -218,6 +224,7 @@ def set_willingness(message):
 		db.execute("DELETE FROM tutor_list WHERE user_id = ?", user_id)
 		con.commit()
 
+		
 def broadcast(message):
 	user_id = message.from_user.id
 	con = sqlite3.connect('tutors.db')
@@ -269,6 +276,7 @@ def broadcast(message):
 	bot.send_message(chat_id='-1001561042541', text=f"New Tutor!\nSubjects: {subjects_new} \nLevels: {levels_new}\nGender: {gender} \nStage In Life: {occupation} \nNotes: {other}")
 	bot.send_message(chat_id='-1001561042541', parse_mode='HTML', text='Contact User <a href="https://t.me/{}">Here</a>'.format(username))
 
+	
 bot.enable_save_next_step_handlers(delay=2)
 
 bot.load_next_step_handlers()
